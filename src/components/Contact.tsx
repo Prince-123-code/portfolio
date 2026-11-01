@@ -34,45 +34,40 @@ export const Contact: React.FC = () => {
     setSubmitError(null);
 
     try {
-      const endpoint = 'https://formsubmit.co/ajax/2ae2e3f17ac558174a67be34d45d311d';
-      const response = await fetch(endpoint, {
+      const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
+          access_key: '0008aa24-fb45-42da-8ac9-e055dcc31398',
           name: formData.name,
           email: formData.email,
           message: formData.message,
-          _subject: `Portfolio Message from ${formData.name}`,
-          _replyto: formData.email,
-          _template: 'table',
-          _captcha: 'false',
+          subject: `Portfolio Message from ${formData.name}`,
+          from_name: formData.name,
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && (data.success === 'true' || data.success === true)) {
+      if (data.success) {
         setIsSubmitting(false);
         setSubmitted(true);
         setFormData({ name: '', email: '', message: '' });
-      } else if (data.message && data.message.includes('Activation')) {
-        // First-time activation email sent to Prince
-        setIsSubmitting(false);
-        setSubmitted(true);
-        setFormData({ name: '', email: '', message: '' });
+        setTimeout(() => setSubmitted(false), 8000);
       } else {
         throw new Error(data.message || 'Delivery service was unable to send.');
       }
     } catch (err: any) {
-      console.error('Direct submission error, falling back:', err);
+      console.error('Submission error, falling back to Gmail composer:', err);
       // Fallback: Open Gmail Web Composer directly in browser with pre-filled content
       openGmailComposer(formData.name, formData.email, formData.message);
       setIsSubmitting(false);
       setSubmitted(true);
       setFormData({ name: '', email: '', message: '' });
+      setTimeout(() => setSubmitted(false), 8000);
     }
   };
 
