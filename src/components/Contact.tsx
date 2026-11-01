@@ -9,6 +9,7 @@ export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [needsActivation, setNeedsActivation] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleCopyEmail = () => {
@@ -32,42 +33,46 @@ export const Contact: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
+    setNeedsActivation(false);
 
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
+      const response = await fetch('https://formsubmit.co/ajax/princeprince12631@gmail.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          access_key: '0008aa24-fb45-42da-8ac9-e055dcc31398',
           name: formData.name,
           email: formData.email,
           message: formData.message,
-          subject: `Portfolio Message from ${formData.name}`,
-          from_name: formData.name,
+          _subject: `Portfolio Message from ${formData.name}`,
+          _replyto: formData.email,
+          _captcha: 'false',
+          _template: 'table',
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success === 'true' || data.success === true) {
         setIsSubmitting(false);
         setSubmitted(true);
+        setNeedsActivation(false);
         setFormData({ name: '', email: '', message: '' });
-        setTimeout(() => setSubmitted(false), 8000);
+        setTimeout(() => setSubmitted(false), 10000);
+      } else if (data.message && data.message.toLowerCase().includes('activation')) {
+        setIsSubmitting(false);
+        setNeedsActivation(true);
       } else {
-        throw new Error(data.message || 'Delivery service was unable to send.');
+        throw new Error(data.message || 'Unable to deliver message.');
       }
     } catch (err: any) {
-      console.error('Submission error, falling back to Gmail composer:', err);
-      // Fallback: Open Gmail Web Composer directly in browser with pre-filled content
-      openGmailComposer(formData.name, formData.email, formData.message);
+      console.error('Contact form submission error:', err);
       setIsSubmitting(false);
-      setSubmitted(true);
-      setFormData({ name: '', email: '', message: '' });
-      setTimeout(() => setSubmitted(false), 8000);
+      setSubmitError(
+        'Direct delivery encountered a network issue. You can send your message directly using the Gmail button below.'
+      );
     }
   };
 
@@ -233,6 +238,40 @@ export const Contact: React.FC = () => {
                   </button>
                 </div>
               </div>
+            ) : needsActivation ? (
+              <div className="py-10 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 text-[#d8b46a] flex items-center justify-center mb-3">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <h4 className="font-montserrat text-xl font-bold text-white">1-Click Activation Email Sent</h4>
+                <p className="mt-2 text-xs text-zinc-300 max-w-md leading-relaxed">
+                  FormSubmit just sent a 1-time verification email to <strong className="text-[#d8b46a] font-mono">princeprince12631@gmail.com</strong>.
+                </p>
+                <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-left max-w-md">
+                  <p className="font-bold mb-1">To start receiving emails directly:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-zinc-300">
+                    <li>Open your Gmail inbox at <strong className="text-white">princeprince12631@gmail.com</strong> (or Spam folder).</li>
+                    <li>Look for the email with subject: <strong className="text-white">FormSubmit: Activate form</strong>.</li>
+                    <li>Click the green <strong className="text-emerald-400">"Activate Form"</strong> button inside it.</li>
+                  </ol>
+                </div>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href="https://mail.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hero-primary-button text-xs py-2.5 px-5"
+                  >
+                    Open Gmail Inbox
+                  </a>
+                  <button
+                    onClick={() => setNeedsActivation(false)}
+                    className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-montserrat text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Back to Form
+                  </button>
+                </div>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -285,8 +324,16 @@ export const Contact: React.FC = () => {
                 </div>
 
                 {submitError && (
-                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
-                    {submitError}
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex flex-col gap-2">
+                    <p>{submitError}</p>
+                    <button
+                      type="button"
+                      onClick={() => openGmailComposer(formData.name, formData.email, formData.message)}
+                      className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-semibold cursor-pointer transition-all"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      Open in Gmail with prefilled message
+                    </button>
                   </div>
                 )}
 
