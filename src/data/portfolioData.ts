@@ -58,7 +58,7 @@ export const personalInfo = {
   },
   stats: [
     { label: "Lighthouse Score", value: "92+" },
-    { label: "Production Sites", value: "33+" },
+    { label: "Core Web Vitals", value: "95+" },
     { label: "Reusable Components", value: "25+" },
     { label: "Load Time Reduction", value: "28%" },
   ],

@@ -23,7 +23,7 @@ export const Hero: React.FC = () => {
 
   const stats = [
     { label: 'Lighthouse Score', value: '92+' },
-    { label: 'Production Sites', value: '33+' },
+    { label: 'Core Web Vitals', value: '95+' },
     { label: 'Reusable Primitives', value: '25+' },
     { label: 'Mobile Fidelity', value: '100%' },
   ];
